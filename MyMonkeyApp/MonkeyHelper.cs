@@ -130,8 +130,7 @@ public static class MonkeyHelper
     /// <returns>A randomly selected monkey.</returns>
     public static Monkey GetRandomMonkey()
     {
-        var random = new Random();
-        var index = random.Next(_monkeys.Count);
+        var index = Random.Shared.Next(_monkeys.Count);
         return _monkeys[index];
     }
 }
