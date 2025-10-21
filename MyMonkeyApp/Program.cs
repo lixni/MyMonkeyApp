@@ -24,11 +24,20 @@ while (isRunning)
             GetRandomMonkey();
             break;
         case "4":
+            await MonkeyHelper.DisplayMonkeysFromMcpInTableAsync();
+            break;
+        case "5":
+            await MonkeyHelper.ListMonkeysFromMcpAsync();
+            break;
+        case "6":
+            await MonkeyHelper.ListAllMonkeysIncludingMcpAsync();
+            break;
+        case "7":
             isRunning = false;
             Console.WriteLine("Thanks for visiting! See you later! 🐒");
             break;
         default:
-            Console.WriteLine("❌ Invalid option. Please enter a number between 1 and 4.");
+            Console.WriteLine("❌ Invalid option. Please enter a number between 1 and 7.");
             break;
     }
 
@@ -74,13 +83,16 @@ static void DisplayMenu()
 ┌──────────────────────────────────────┐
 │           MAIN MENU                  │
 ├──────────────────────────────────────┤
-│  1. 📋 List all monkeys              │
+│  1. 📋 List all monkeys (local)      │
 │  2. 🔍 Find monkey by name           │
 │  3. 🎲 Get random monkey             │
-│  4. 🚪 Exit                          │
+│  4. 📊 Show MCP monkeys table        │
+│  5. 🌐 List monkeys from MCP         │
+│  6. 📋 List all monkeys (local+MCP)  │
+│  7. 🚪 Exit                          │
 └──────────────────────────────────────┘
 ");
-    Console.Write("Enter your choice (1-4): ");
+    Console.Write("Enter your choice (1-7): ");
 }
 
 /// <summary>
@@ -96,7 +108,7 @@ static void ListAllMonkeys()
     
     foreach (var monkey in monkeys)
     {
-        DisplayMonkeyDetails(monkey);
+        MonkeyHelper.DisplayMonkeyDetails(monkey);
         Console.WriteLine();
     }
 
@@ -125,7 +137,7 @@ static void FindMonkeyByName()
     {
         Console.WriteLine("✅ Monkey found!\n");
         Console.WriteLine("═══════════════════════════════════════════════════════════");
-        DisplayMonkeyDetails(monkey);
+        MonkeyHelper.DisplayMonkeyDetails(monkey);
     }
     else
     {
@@ -157,20 +169,9 @@ static void GetRandomMonkey()
     Console.WriteLine("              YOUR RANDOM MONKEY IS...                    ");
     Console.WriteLine("═══════════════════════════════════════════════════════════\n");
     
-    DisplayMonkeyDetails(monkey);
+    MonkeyHelper.DisplayMonkeyDetails(monkey);
 }
 
-/// <summary>
-/// Displays detailed information about a specific monkey.
-/// </summary>
-/// <param name="monkey">The monkey to display.</param>
-static void DisplayMonkeyDetails(Monkey monkey)
-{
-    Console.WriteLine($"🐵 Name:        {monkey.Name}");
-    Console.WriteLine($"🧬 Species:     {monkey.Species}");
-    Console.WriteLine($"🌍 Location:    {monkey.Location}");
-    Console.WriteLine($"👥 Population:  {monkey.Population:N0}");
-    Console.WriteLine($"📝 Description: {monkey.Description}");
-    Console.WriteLine($"🖼️  Image URL:   {monkey.ImageUrl}");
-    Console.WriteLine("───────────────────────────────────────────────────────────");
-}
+
+
+

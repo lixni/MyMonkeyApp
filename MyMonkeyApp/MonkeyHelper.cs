@@ -1,3 +1,5 @@
+using MyMonkeyApp.Services;
+
 namespace MyMonkeyApp;
 
 /// <summary>
@@ -133,4 +135,203 @@ public static class MonkeyHelper
         var index = Random.Shared.Next(_monkeys.Count);
         return _monkeys[index];
     }
+
+    /// <summary>
+    /// Retrieves monkeys from the MonkeyMCP server and displays them in a formatted table.
+    /// </summary>
+    public static async Task DisplayMonkeysFromMcpInTableAsync()
+    {
+        try
+        {
+            var mcpMonkeys = await GetMonkeysFromMcpAsync();
+            
+            if (!mcpMonkeys.Any())
+            {
+                Console.WriteLine("❌ No monkeys retrieved from MCP server.");
+                return;
+            }
+
+            // Sort monkeys alphabetically by name
+            var sortedMonkeys = mcpMonkeys.OrderBy(m => m.Name).ToList();
+
+            DisplayMonkeyTable(sortedMonkeys);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving monkeys from MCP: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves monkeys from the MonkeyMCP server using the MCP service.
+    /// </summary>
+    /// <returns>A list of monkeys from the MCP server.</returns>
+    private static async Task<List<Services.McpMonkey>> GetMonkeysFromMcpAsync()
+    {
+        using var mcpService = new MonkeyMcpService();
+        return await mcpService.GetAllMonkeysAsync();
+    }
+
+    /// <summary>
+    /// Retrieves a specific monkey by name from the MonkeyMCP server.
+    /// </summary>
+    /// <param name="name">The name of the monkey to find.</param>
+    /// <returns>The monkey if found; otherwise, null.</returns>
+    public static async Task<Services.McpMonkey?> GetMonkeyByNameFromMcpAsync(string name)
+    {
+        using var mcpService = new MonkeyMcpService();
+        return await mcpService.GetMonkeyByNameAsync(name);
+    }
+
+    /// <summary>
+    /// Lists all monkeys from the MonkeyMCP server with details.
+    /// </summary>
+    public static async Task ListMonkeysFromMcpAsync()
+    {
+        Console.WriteLine("═══════════════════════════════════════════════════════════");
+        Console.WriteLine("              MONKEYS FROM MCP SERVER                     ");
+        Console.WriteLine("═══════════════════════════════════════════════════════════\n");
+
+        try
+        {
+            var mcpMonkeys = await GetMonkeysFromMcpAsync();
+            
+            if (mcpMonkeys.Any())
+            {
+                foreach (var monkey in mcpMonkeys.OrderBy(m => m.Name))
+                {
+                    DisplayMcpMonkeyDetails(monkey);
+                    Console.WriteLine();
+                }
+
+                Console.WriteLine($"📊 Total monkeys from MCP server: {mcpMonkeys.Count}");
+                Console.WriteLine($"🌍 Total population: {mcpMonkeys.Sum(m => m.Population):N0}");
+            }
+            else
+            {
+                Console.WriteLine("❌ No monkeys retrieved from MCP server or server is unavailable.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error connecting to MCP server: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Gets a combined list of local and MCP monkeys.
+    /// </summary>
+    /// <returns>A combined list of all monkeys.</returns>
+    public static async Task ListAllMonkeysIncludingMcpAsync()
+    {
+        Console.WriteLine("═══════════════════════════════════════════════════════════");
+        Console.WriteLine("           ALL MONKEYS (LOCAL + MCP)                      ");
+        Console.WriteLine("═══════════════════════════════════════════════════════════\n");
+
+        try
+        {
+            // Get local monkeys
+            var localMonkeys = GetAllMonkeys();
+            
+            // Get MCP monkeys
+            var mcpMonkeys = await GetMonkeysFromMcpAsync();
+
+            Console.WriteLine("🏠 LOCAL MONKEYS:");
+            Console.WriteLine("─────────────────");
+            foreach (var monkey in localMonkeys)
+            {
+                MonkeyHelper.DisplayMonkeyDetails(monkey);
+                Console.WriteLine();
+            }
+
+            Console.WriteLine("\n🌐 MCP SERVER MONKEYS:");
+            Console.WriteLine("──────────────────────");
+            foreach (var monkey in mcpMonkeys.OrderBy(m => m.Name))
+            {
+                DisplayMcpMonkeyDetails(monkey);
+                Console.WriteLine();
+            }
+
+            Console.WriteLine($"📊 Total local monkeys: {localMonkeys.Count}");
+            Console.WriteLine($"📊 Total MCP monkeys: {mcpMonkeys.Count}");
+            Console.WriteLine($"📊 Grand total: {localMonkeys.Count + mcpMonkeys.Count}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving monkeys: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Displays a formatted table of monkeys.
+    /// </summary>
+    /// <param name="monkeys">The list of monkeys to display.</param>
+    private static void DisplayMonkeyTable(List<Services.McpMonkey> monkeys)
+    {
+        Console.WriteLine("═══════════════════════════════════════════════════════════════════════════════════════════════");
+        Console.WriteLine("                                    MONKEYS FROM MCP SERVER                                    ");
+        Console.WriteLine("═══════════════════════════════════════════════════════════════════════════════════════════════");
+        Console.WriteLine();
+
+        // Calculate column widths
+        var nameWidth = Math.Max(20, monkeys.Max(m => m.Name.Length) + 2);
+        var locationWidth = Math.Max(25, monkeys.Max(m => m.Location.Length) + 2);
+        var populationWidth = 12;
+        
+        // Print header
+        var headerLine = $"│ {"Name".PadRight(nameWidth)} │ {"Location".PadRight(locationWidth)} │ {"Population".PadLeft(populationWidth)} │";
+        var separatorLine = "├" + new string('─', nameWidth + 2) + "├" + new string('─', locationWidth + 2) + "├" + new string('─', populationWidth + 2) + "┤";
+        var topLine = "┌" + new string('─', nameWidth + 2) + "┬" + new string('─', locationWidth + 2) + "┬" + new string('─', populationWidth + 2) + "┐";
+        var bottomLine = "└" + new string('─', nameWidth + 2) + "┴" + new string('─', locationWidth + 2) + "┴" + new string('─', populationWidth + 2) + "┘";
+
+        Console.WriteLine(topLine);
+        Console.WriteLine(headerLine);
+        Console.WriteLine(separatorLine);
+
+        // Print monkey data
+        foreach (var monkey in monkeys)
+        {
+            var populationFormatted = monkey.Population.ToString("N0");
+            var dataLine = $"│ {monkey.Name.PadRight(nameWidth)} │ {monkey.Location.PadRight(locationWidth)} │ {populationFormatted.PadLeft(populationWidth)} │";
+            Console.WriteLine(dataLine);
+        }
+
+        Console.WriteLine(bottomLine);
+        Console.WriteLine();
+        Console.WriteLine($"📊 Total monkeys: {monkeys.Count}");
+        Console.WriteLine($"🌍 Total population: {monkeys.Sum(m => m.Population):N0}");
+    }
+
+    /// <summary>
+    /// Displays detailed information about a monkey from MCP server.
+    /// </summary>
+    /// <param name="monkey">The MCP monkey to display.</param>
+    private static void DisplayMcpMonkeyDetails(Services.McpMonkey monkey)
+    {
+        Console.WriteLine($"🐒 {monkey.Name}");
+        Console.WriteLine($"   📍 Location: {monkey.Location}");
+        Console.WriteLine($"   👥 Population: {monkey.Population:N0}");
+        Console.WriteLine($"   📝 Details: {monkey.Details}");
+        if (!string.IsNullOrEmpty(monkey.Image))
+        {
+            Console.WriteLine($"   🖼️  Image: {monkey.Image}");
+        }
+    }
+
+    /// <summary>
+    /// Displays detailed information about a local monkey.
+    /// </summary>
+    /// <param name="monkey">The monkey to display.</param>
+    public static void DisplayMonkeyDetails(Monkey monkey)
+    {
+        Console.WriteLine($"🐵 Name:        {monkey.Name}");
+        Console.WriteLine($"🧬 Species:     {monkey.Species}");
+        Console.WriteLine($"🌍 Location:    {monkey.Location}");
+        Console.WriteLine($"👥 Population:  {monkey.Population:N0}");
+        Console.WriteLine($"📝 Description: {monkey.Description}");
+        Console.WriteLine($"🖼️  Image URL:   {monkey.ImageUrl}");
+        Console.WriteLine("───────────────────────────────────────────────────────────");
+    }
 }
+
+
